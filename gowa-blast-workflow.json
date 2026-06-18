@@ -1,0 +1,136 @@
+{
+  "name": "Gowa Blast",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gowa-blast",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11111111-1111-1111-1111-111111111101",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "11111111-1111-1111-1111-111111111102"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://GANTI_DENGAN_URL_GOWA/send/message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic GANTI_DENGAN_BASE64_USER_PASS"
+            },
+            {
+              "name": "X-Device-Id",
+              "value": "=GANTI_DENGAN_DEVICE_ID"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "11111111-1111-1111-1111-111111111103",
+      "name": "Kirim via Gowa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ambil data dari webhook\nconst phone = $('Webhook').first().json.phone || '';\nconst g = $input.first().json;\n\n// Deteksi sukses dari respons gowa\n// Sukses: ada key 'results' atau 'data', atau code/status 2xx\n// Gagal: ada pesan error spesifik\nconst hasResults = g.results !== undefined || g.data !== undefined;\nconst codeStr = String(g.code || g.status || '0');\nconst statusOk = codeStr.startsWith('2') || (Number(codeStr) >= 200 && Number(codeStr) < 300);\nconst msgLower = String(g.message || '').toLowerCase();\nconst isErrorMsg = (\n  msgLower.includes('device') ||\n  msgLower.includes('error') ||\n  msgLower.includes('failed') ||\n  msgLower.includes('not found') ||\n  msgLower.includes('invalid') ||\n  msgLower.includes('unauthorized')\n) && !hasResults;\n\nconst success = (hasResults || statusOk) && !isErrorMsg;\n\nreturn [{\n  json: {\n    success,\n    phone,\n    message: g.message || (success ? 'Pesan terkirim' : 'Gagal mengirim')\n  }\n}];"
+      },
+      "id": "11111111-1111-1111-1111-111111111104",
+      "name": "Format Respons",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "11111111-1111-1111-1111-111111111105",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Kirim via Gowa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kirim via Gowa": {
+      "main": [
+        [
+          {
+            "node": "Format Respons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Respons": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "gowa-blast-v2",
+  "tags": []
+}
