@@ -1,13 +1,21 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import type { JSONContent } from '@tiptap/react'
 
+/** Sinyal untuk mengganti isi editor secara programatik (mis. hasil AI). */
+export interface InjectSignal {
+  text: string
+  nonce: number // ubah nilai ini tiap kali ingin meng-inject (mis. Date.now())
+}
+
 interface Props {
   onChange: (json: JSONContent) => void
   disabled?: boolean
+  inject?: InjectSignal | null
 }
 
 function ToolbarBtn({
@@ -40,7 +48,7 @@ function ToolbarBtn({
   )
 }
 
-export default function WysiwygEditor({ onChange, disabled }: Props) {
+export default function WysiwygEditor({ onChange, disabled, inject }: Props) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -52,6 +60,22 @@ export default function WysiwygEditor({ onChange, disabled }: Props) {
       onChange(editor.getJSON())
     },
   })
+
+  // Terapkan teks dari luar (mis. hasil AI) ketika nonce berubah
+  useEffect(() => {
+    if (!editor || !inject) return
+    const doc: JSONContent = {
+      type: 'doc',
+      content: inject.text.split('\n').map(line => ({
+        type: 'paragraph',
+        content: line ? [{ type: 'text', text: line }] : [],
+      })),
+    }
+    editor.commands.setContent(doc)
+    onChange(editor.getJSON())
+    // hanya jalankan saat nonce berubah
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inject?.nonce])
 
   if (!editor) return null
 

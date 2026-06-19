@@ -11,6 +11,11 @@ export interface GowaSettings {
   maxDelaySec: number // jeda maksimum antar pesan (detik)
   restEvery: number // setelah sekian pesan, istirahat lebih lama (0 = nonaktif)
   restCooldownSec: number // durasi istirahat (detik)
+  // AI (OpenAI-compatible) untuk bantu tulis pesan
+  aiBaseUrl: string // contoh: https://api.openai.com/v1
+  aiApiKey: string
+  aiModel: string // model terpilih
+  aiPersona: string // gaya/persona penulisan pesan
 }
 
 const DEFAULT_SETTINGS: GowaSettings = {
@@ -21,6 +26,10 @@ const DEFAULT_SETTINGS: GowaSettings = {
   maxDelaySec: 15,
   restEvery: 20,
   restCooldownSec: 60,
+  aiBaseUrl: '',
+  aiApiKey: '',
+  aiModel: '',
+  aiPersona: '',
 }
 
 export function useSettings() {

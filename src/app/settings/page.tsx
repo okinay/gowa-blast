@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useSettings, type GowaSettings } from '@/hooks/useSettings'
 import { testConnection } from '@/lib/gowa'
+import { fetchModels } from '@/lib/ai'
 import Link from 'next/link'
-import { ArrowLeft, Plug, Loader, CheckCircle, XCircle, Timer, Moon } from '@/components/icons'
+import { ArrowLeft, Plug, Loader, CheckCircle, XCircle, Timer, Moon, Refresh, Sparkles } from '@/components/icons'
 
 export default function SettingsPage() {
   const { settings, saveSettings, loaded } = useSettings()
@@ -12,6 +13,11 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
+
+  // AI models
+  const [models, setModels] = useState<string[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [modelsError, setModelsError] = useState('')
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -43,6 +49,20 @@ export default function SettingsPage() {
     setTestResult(null)
     setTestResult(await testConnection(form))
     setTesting(false)
+  }
+
+  async function handleFetchModels() {
+    setModelsLoading(true)
+    setModelsError('')
+    const res = await fetchModels(form.aiBaseUrl, form.aiApiKey)
+    if (res.ok) {
+      setModels(res.models)
+      if (res.models.length === 0) setModelsError('Tidak ada model ditemukan.')
+      else if (!res.models.includes(form.aiModel)) update('aiModel', res.models[0])
+    } else {
+      setModelsError(res.message ?? 'Gagal mengambil model')
+    }
+    setModelsLoading(false)
   }
 
   if (!loaded) {
@@ -203,6 +223,104 @@ export default function SettingsPage() {
             <strong className="text-zinc-700">{form.restCooldownSec} detik</strong>.
           </p>
         )}
+      </section>
+
+      {/* AI */}
+      <section className="surface p-5 space-y-5">
+        <div>
+          <h2 className="eyebrow flex items-center gap-1.5">
+            <Sparkles width={13} height={13} className="text-brand" /> Bantuan AI
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1.5">
+            Endpoint OpenAI-compatible untuk membantu menulis pesan dari draft-mu.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-zinc-700">Base URL</label>
+          <input
+            type="url"
+            value={form.aiBaseUrl}
+            onChange={e => {
+              update('aiBaseUrl', e.target.value)
+              setModels([])
+              setModelsError('')
+            }}
+            placeholder="https://api.openai.com/v1"
+            className="field"
+          />
+          <p className="text-xs text-zinc-400">Termasuk path versi, mis. diakhiri dengan /v1.</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-zinc-700">
+            API Key <span className="text-zinc-400 font-normal">· opsional</span>
+          </label>
+          <input
+            type="password"
+            value={form.aiApiKey}
+            onChange={e => {
+              update('aiApiKey', e.target.value)
+              setModels([])
+              setModelsError('')
+            }}
+            placeholder="sk-…"
+            className="field font-mono"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-zinc-700">Model</label>
+          <div className="flex items-center gap-2">
+            <select
+              value={form.aiModel}
+              onChange={e => update('aiModel', e.target.value)}
+              disabled={models.length === 0}
+              className="field appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {models.length === 0 ? (
+                <option value="">{form.aiModel || 'Ambil model dulu'}</option>
+              ) : (
+                models.map(m => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))
+              )}
+            </select>
+            <button
+              type="button"
+              onClick={handleFetchModels}
+              disabled={modelsLoading || !form.aiBaseUrl}
+              className="btn-ghost shrink-0"
+            >
+              {modelsLoading ? <Loader width={16} height={16} /> : <Refresh width={16} height={16} />}
+              Ambil model
+            </button>
+          </div>
+          {modelsError && (
+            <p className="flex items-center gap-1.5 text-xs text-red-600">
+              <XCircle width={13} height={13} /> {modelsError}
+            </p>
+          )}
+          {models.length > 0 && !modelsError && (
+            <p className="text-xs text-zinc-400">{models.length} model tersedia.</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-zinc-700">Persona / gaya penulisan</label>
+          <textarea
+            value={form.aiPersona}
+            onChange={e => update('aiPersona', e.target.value)}
+            placeholder="Contoh: Admin toko yang ramah dan santai, suka pakai sapaan 'Kak', sedikit emoji, tetap sopan."
+            className="field h-24 resize-none leading-relaxed"
+          />
+          <p className="text-xs text-zinc-400">
+            Dipakai sebagai pedoman gaya saat AI menulis pesan.
+          </p>
+        </div>
       </section>
 
       <button onClick={handleSave} className="btn-primary w-full py-3">
