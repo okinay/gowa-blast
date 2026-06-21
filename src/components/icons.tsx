@@ -87,6 +87,18 @@ export const ArrowLeft = (p: IconProps) => (
 export const Upload = (p: IconProps) => (
   <svg {...base(p)}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
 )
+export const Table = (p: IconProps) => (
+  <svg {...base(p)}><path d="M12 3v18M3 9h18M3 15h18" /><rect width="18" height="18" x="3" y="3" rx="2" /></svg>
+)
+export const Plus = (p: IconProps) => (
+  <svg {...base(p)}><path d="M5 12h14M12 5v14" /></svg>
+)
+export const Download = (p: IconProps) => (
+  <svg {...base(p)}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
+)
+export const Clipboard = (p: IconProps) => (
+  <svg {...base(p)}><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></svg>
+)
 export const Sparkles = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
