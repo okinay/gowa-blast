@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSettings } from '@/hooks/useSettings'
 import { useBlaster, type BlastJob } from '@/hooks/useBlaster'
 import { normalizePhone } from '@/lib/gowa'
-import { parseSheetFile, parseSheetText, applyTemplate, TEMPLATE_CSV, type SheetRow } from '@/lib/sheet'
+import { parseSheetFile, parseSheetText, applyTemplate, templateXlsxBlob, type SheetRow } from '@/lib/sheet'
 import BlastPanel from '@/components/BlastPanel'
 import ModeTabs from '@/components/ModeTabs'
 import {
@@ -233,14 +233,21 @@ export default function PersonalisasiPage() {
     setRows(prev => prev.map(r => ({ ...r, message: templateText })))
   }, [templateText])
 
-  const downloadTemplate = useCallback(() => {
-    const blob = new Blob([TEMPLATE_CSV], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'template-gowa-blast.csv'
-    a.click()
-    URL.revokeObjectURL(url)
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false)
+  const downloadTemplate = useCallback(async () => {
+    setDownloadingTemplate(true)
+    try {
+      const blob = await templateXlsxBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'template-gowa-blast.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setImportError('Gagal membuat template: ' + String(err))
+    }
+    setDownloadingTemplate(false)
   }, [])
 
   const handlePoolFiles = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -332,8 +339,8 @@ export default function PersonalisasiPage() {
           <button onClick={addRow} disabled={isBlasting} className="btn-ghost">
             <Plus width={16} height={16} /> Tambah baris
           </button>
-          <button onClick={downloadTemplate} className="btn-ghost">
-            <Download width={16} height={16} /> Template
+          <button onClick={downloadTemplate} disabled={downloadingTemplate} className="btn-ghost">
+            {downloadingTemplate ? <Loader width={16} height={16} /> : <Download width={16} height={16} />} Template .xlsx
           </button>
           {hasData && (
             <button onClick={() => setRows([emptyRow()])} disabled={isBlasting} className="btn-danger-soft ml-auto">

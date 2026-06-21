@@ -160,10 +160,23 @@ export function applyTemplate(message: string, vars: { nama: string; nomor: stri
   return message.replace(/\{nama\}/gi, vars.nama).replace(/\{nomor\}/gi, vars.nomor)
 }
 
-/** Isi file template CSV untuk diunduh. */
-export const TEMPLATE_CSV = [
-  'nomor,nama,pesan,file',
-  '628123456789,Budi,Halo {nama} selamat pagi,',
-  '628987654321,Sari,Promo khusus untukmu {nama},promo.jpg',
-  '08123456789,Andi,Terima kasih sudah berlangganan,',
-].join('\n')
+/** Baris contoh untuk template yang diunduh. */
+export const TEMPLATE_ROWS: string[][] = [
+  ['nomor', 'nama', 'pesan', 'file'],
+  ['628123456789', 'Budi', 'Halo {nama} selamat pagi', ''],
+  ['628987654321', 'Sari', 'Promo khusus untukmu {nama}', 'promo.jpg'],
+  ['08123456789', 'Andi', 'Terima kasih sudah berlangganan', ''],
+]
+
+/** Bangun file template Excel (.xlsx) siap diedit, dengan lebar kolom yang nyaman. */
+export async function templateXlsxBlob(): Promise<Blob> {
+  const XLSX = await import('xlsx')
+  const ws = XLSX.utils.aoa_to_sheet(TEMPLATE_ROWS)
+  ws['!cols'] = [{ wch: 16 }, { wch: 18 }, { wch: 44 }, { wch: 18 }]
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Penerima')
+  const out = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+  return new Blob([out], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+}
