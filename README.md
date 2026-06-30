@@ -6,6 +6,14 @@ Dilengkapi sistem **anti-spam** (jeda acak + istirahat berkala) dan **bantuan AI
 
 ---
 
+## 📸 Screenshots
+
+| Broadcast | Personalisasi | Settings |
+|-----------|---------------|----------|
+| ![Broadcast](public/screenshots/broadcast.png) | ![Personalisasi](public/screenshots/personalisasi.png) | ![Settings](public/screenshots/settings.png) |
+
+---
+
 ## ✨ Fitur
 
 - **Kirim ke nomor** — input manual (satu per baris) atau import CSV.
